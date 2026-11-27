@@ -1,0 +1,11 @@
+# ===== Seeding the catalogue: each warehouse is a separate shard (horizontal fragment) =====
+ADD MUMBAI LAPTOP Dell_Laptop 10 55000
+ADD MUMBAI PHONE  Pixel_Phone 20 30000
+ADD MUMBAI PEN    Gel_Pen     5000 10
+ADD PUNE   LAPTOP Dell_Laptop 4 55000
+ADD PUNE   HEADPHONE Sony_Headphone 15 8000
+ADD PUNE   PEN    Gel_Pen     5000 10
+ADD DELHI  LAPTOP Dell_Laptop 6 55000
+ADD DELHI  PHONE  Pixel_Phone 8 30000
+ADD DELHI  PEN    Gel_Pen     5000 10
+STOCK LAPTOP

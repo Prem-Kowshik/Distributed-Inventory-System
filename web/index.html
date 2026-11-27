@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distributed Inventory DBMS · Live Demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23b693ff%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="16" cy="8" rx="10" ry="4"/><path d="M6 8v8c0 2.2 4.5 4 10 4s10-1.8 10-4V8"/><path d="M6 16v8c0 2.2 4.5 4 10 4s10-1.8 10-4v-8"/></g></svg>
+    </div>
+    <div>
+      <h1>Multi-Warehouse Distributed Inventory</h1>
+      <p>3 shards · 3 replicas each · primary-backup WAL shipping · 2PC · pure Java</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="ctl-label">Replication</span>
+      <div class="seg" id="seg-mode">
+        <button data-v="sync">sync</button><button data-v="quorum">quorum</button><button data-v="async">async</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Read LB</span>
+      <div class="seg" id="seg-lb">
+        <button data-v="rr">rr</button><button data-v="leastconn">leastconn</button><button data-v="random">random</button><button data-v="primary">primary</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Cluster</span>
+      <div class="btn-row">
+        <button class="btn ghost sm" id="btn-start" title="Start every node + router that is not running">Start</button>
+        <button class="btn ghost sm" id="btn-seed" title="Load demo/seed.txt">Seed</button>
+        <button class="btn ghost sm" id="btn-stop" title="kill -9 every process">Stop</button>
+        <button class="btn accent sm" id="btn-fresh" title="Stop, wipe data/ logs/ run/, start, seed">Fresh start</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ============================== LEFT: the cluster ============================== -->
+  <section class="stage-col">
+    <div class="card stage" id="stage">
+      <div class="stage-head">
+        <h2>Cluster topology</h2>
+        <div class="legend">
+          <span><i class="dot write"></i>write</span>
+          <span><i class="dot repl"></i>WAL shipping</span>
+          <span><i class="dot read"></i>read</span>
+          <span><i class="dot tpc"></i>2PC</span>
+        </div>
+      </div>
+
+      <svg class="wires" id="wires"></svg>
+      <div class="packets" id="packets"></div>
+
+      <div class="router-row">
+        <div class="router" id="router">
+          <div class="router-pulse"></div>
+          <div class="router-main">
+            <div class="router-title">ROUTER <span class="muted">/ 2PC coordinator</span></div>
+            <div class="router-sub" id="router-sub">connecting…</div>
+          </div>
+          <div class="router-tags">
+            <span class="tag" id="tag-mode">sync</span>
+            <span class="tag" id="tag-lb">rr</span>
+            <span class="tag warn hidden" id="tag-fp"></span>
+          </div>
+          <div class="router-actions" id="router-actions"></div>
+        </div>
+      </div>
+
+      <div class="shards" id="shards"></div>
+
+      <div class="empty" id="empty">
+        <div class="empty-box">
+          <h3>Cluster is not running</h3>
+          <p>Start the 9 storage nodes and the router from here. <b>Fresh start</b> wipes all data, starts every process and loads <code>demo/seed.txt</code>.</p>
+          <div class="btn-row center">
+            <button class="btn accent" data-act="fresh">Fresh start</button>
+            <button class="btn ghost" data-act="start">Start (keep data)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card events">
+      <div class="events-head">
+        <h2>Event stream</h2>
+        <div class="chips" id="ev-filter">
+          <button class="chip on" data-f="all">all</button>
+          <button class="chip" data-f="fault">failover</button>
+          <button class="chip" data-f="tpc">2PC</button>
+          <button class="chip" data-f="warn">warnings</button>
+        </div>
+        <select id="ev-source" class="select"></select>
+        <button class="chip" id="ev-pause">pause</button>
+      </div>
+      <div class="events-body" id="events"></div>
+    </div>
+  </section>
+
+  <!-- ============================== RIGHT: the six topics ============================== -->
+  <section class="topic-col">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="card panel" id="panel"></div>
+
+    <div class="card console" id="console">
+      <div class="console-head">
+        <h2>Console</h2>
+        <span class="muted small">any client command · ↑/↓ history</span>
+        <button class="chip" id="console-clear" title="clear output">clear</button>
+        <button class="chip" id="console-big" title="make the console taller">expand</button>
+        <button class="chip" id="console-toggle">collapse</button>
+      </div>
+      <div class="console-out" id="console-out"></div>
+      <form class="console-in" id="console-form" autocomplete="off">
+        <span class="prompt">inventory&gt;</span>
+        <input id="console-input" spellcheck="false" placeholder="STOCK LAPTOP">
+      </form>
+    </div>
+  </section>
+</main>
+
+<div class="toasts" id="toasts"></div>
+<div class="menu hidden" id="menu"></div>
+<script src="app.js"></script>
+</body>
+</html>
